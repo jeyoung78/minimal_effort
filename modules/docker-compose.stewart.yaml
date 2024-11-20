@@ -7,17 +7,21 @@ services:
         - "stewart_image:${TAG}"
         - "stewart_image:main"
     image: "stewart_image:${TAG}"
-    platform: linux/arm64/v8
     profiles:
       - deploy
     command: /bin/bash -c "ros2 launch bringup_stewart stewart.launch.py"
+    devices:
+      - /dev/video0
+      - /dev/video1
   
   stewart_dev:
     build: *stewart_build
     image: "stewart_image:dev_${TAG}"
-    platform: linux/arm64/v8
     command: tail -F anything
     profiles:
       - develop
     volumes:
       - ${MONO_DIR}/src/stewart:/root/ament_ws/src
+    devices:
+      - /dev/video0
+      - /dev/video1

@@ -6,7 +6,9 @@ ENV AMENT_WS=/home/pi/ament_ws
 
 WORKDIR ${AMENT_WS}/src
 
-# Copy in source code 
+# Copy in source code
+COPY src/stewart/bringup_stewart bringup_stewart
+COPY src/stewart/camera_driver camera_driver
 COPY src/stewart/perception perception
 COPY src/stewart/planner planner
 COPY src/stewart/control control
@@ -21,6 +23,11 @@ RUN apt-get -qq update && rosdep update && \
 ################################# Dependencies ################################
 FROM ${BASE_IMAGE} AS dependencies
 ENV AMENT_WS=/home/pi/ament_ws
+
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    rm -rf /var/lib/apt/lists/* && \
+    add-apt-repository universe
 
 # Install Rosdep requirements
 COPY --from=source /tmp/colcon_install_list /tmp/colcon_install_list
