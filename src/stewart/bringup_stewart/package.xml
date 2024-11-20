@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>bringup_stewart</name>
+  <version>0.0.0</version>
+  <description>Bringup Robot package for launching the stewart platform</description>
+
+  <maintainer email="e23zhou@watonomous.ca">Eddy Zhou</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>control</depend>
+  <depend>planner</depend>
+  <depend>perception</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

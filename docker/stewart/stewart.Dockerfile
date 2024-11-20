@@ -6,6 +6,11 @@ ENV AMENT_WS=/home/pi/ament_ws
 
 WORKDIR ${AMENT_WS}/src
 
+# Copy in source code 
+COPY src/stewart/perception perception
+COPY src/stewart/planner planner
+COPY src/stewart/control control
+
 # Scan for rosdeps
 RUN apt-get -qq update && rosdep update && \
     rosdep install --from-paths . --ignore-src -r -s \
@@ -16,22 +21,6 @@ RUN apt-get -qq update && rosdep update && \
 ################################# Dependencies ################################
 FROM ${BASE_IMAGE} AS dependencies
 ENV AMENT_WS=/home/pi/ament_ws
-
-# Install Foxglove Deps
-RUN apt-get update && apt-get install -y curl ros-humble-ros2bag ros-humble-rosbag2* ros-humble-foxglove-msgs&& \
-    rm -rf /var/lib/apt/lists/*
-
-# Set up apt repo
-RUN apt-get update && apt-get install -y lsb-release software-properties-common apt-transport-https && \
-    apt-add-repository universe
-
-# Install Dependencies
-RUN apt-get update && \
-    apt-get install -y \ 
-    ros-$ROS_DISTRO-foxglove-bridge \
-    ros-$ROS_DISTRO-rosbridge-server \
-    ros-$ROS_DISTRO-topic-tools \
-    ros-$ROS_DISTRO-vision-msgs
 
 # Install Rosdep requirements
 COPY --from=source /tmp/colcon_install_list /tmp/colcon_install_list

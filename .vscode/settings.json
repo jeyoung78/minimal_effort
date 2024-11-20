@@ -1,0 +1,11 @@
+{
+    "cmake.ignoreCMakeListsMissing": true,
+    
+    "python.autoComplete.extraPaths": [
+        "/tmp/deps/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/tmp/deps/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.autoSearchPaths": true
+}
