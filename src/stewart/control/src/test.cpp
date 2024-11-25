@@ -266,7 +266,7 @@ int main()
     int MOTORS_START = 1;
     double HEIGHT = 0.125; // THIS VALUE IS VERY ARBITRARY, BUT DO NOT CHANGE BECAUSE IT MESSES UP OUR IK
 
-    // do not go greater than 6.5 degrees LOL
+    // do not go greater than +-6.5 degrees LOL
     std::vector<std::vector<double>> normals = {
         {0.1132, 0, 0.9936},
         {0, 0.1132, 0.9936},
@@ -301,11 +301,11 @@ int main()
             usleep(100000); // Wait before changing direction
         }
 
-        setPWM(file, 0, 0, angleToPWM(0, 15));
-        setPWM(file, 1, 0, angleToPWM(0, 15));
-        setPWM(file, 2, 0, angleToPWMReversed(0, 15));
-        setPWM(file, 3, 0, angleToPWMReversed(0, 15));
-        usleep(1000000);
+        // setPWM(file, 0, 0, angleToPWM(0, 15));
+        // setPWM(file, 1, 0, angleToPWM(0, 15));
+        // setPWM(file, 2, 0, angleToPWMReversed(0, 15));
+        // setPWM(file, 3, 0, angleToPWMReversed(0, 15));
+        // usleep(1000000);
     }
 
     close(file);

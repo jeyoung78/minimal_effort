@@ -46,8 +46,14 @@ COMPOSE_CMD=""
 while [[ $# -gt 0 ]] ; do
     key="$1"
     case $key in
-      -e|--setup-dev-env)
+      -d|--setup-dev-env)
         SETUP_DEV_ENVIRONMENT=1
+        shift
+        SERVICE_NAME=$1
+        if [ -z "$SERVICE_NAME" ]; then
+            echo "Expected watod -d SERVICE_NAME"
+            usage
+        fi
         shift
         ;;
       -v|--verbose)
@@ -86,16 +92,17 @@ fi
 
 MODE_OF_OPERATION=${MODE_OF_OPERATION:-"deploy"}
 
-if [ ! -z $SETUP_DEV_ENVIRONMENT]; then
-    cd $MONO_DIR && . ./mind_scripts/mind-setup-dev-env.sh
-    exit
-fi
-
 # generate .env file from mind_scripts/mind-setup-docker-env.sh
 if [ ! -z $VERBOSE ]; then # if we want to see all verbose coming from setting up env
     cd $MONO_DIR && . ./mind_scripts/mind-setup-docker-env.sh
 else
     cd $MONO_DIR && . ./mind_scripts/mind-setup-docker-env.sh &> /dev/null
+fi
+
+# custom docker compose command to setup development environments outside containers
+if [ ! -z $SETUP_DEV_ENVIRONMENT ]; then
+    source ./mind_scripts/mind-setup-dev-env.bash $SERVICE_NAME
+    exit
 fi
 
 if [ ! -z "$COMPOSE_CMD" ]; then
