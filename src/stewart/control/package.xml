@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>control</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>ROS Node for Stewart Control</description>
 
-  <maintainer email="e23zhou@watonomous.ca">Eddy Zhou</maintainer>
+  <maintainer email="b83singh@watonomous.ca">Bishneet Singh</maintainer>
   <license>MIT</license>
 
   <!--https://www.ros.org/reps/rep-0149.html#dependency-tags-->
