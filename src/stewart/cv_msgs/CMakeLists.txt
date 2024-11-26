@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(stewart_msgs)
+project(cv_msgs)
 
 # Set compiler to use C++ 17 standard
 if(NOT CMAKE_CXX_STANDARD)
@@ -18,7 +18,7 @@ find_package(std_msgs REQUIRED)
 # Add these lines
 find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(stewart_msgs
+rosidl_generate_interfaces(cv_msgs
   "msg/HomographyStamped.msg"
   DEPENDENCIES std_msgs
 )
