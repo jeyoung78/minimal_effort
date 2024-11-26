@@ -29,23 +29,23 @@ def generate_launch_description():
     ld.add_action(camera_driver_node)
 
     # #################### Perception Node #####################
-    # perception_pkg_prefix = get_package_share_directory('perception')
-    # perception_param_file = os.path.join(
-    #     perception_pkg_prefix, 'config', 'params.yaml')
+    perception_pkg_prefix = get_package_share_directory('perception')
+    perception_param_file = os.path.join(
+        perception_pkg_prefix, 'config', 'params.yaml')
     
-    # perception_param = DeclareLaunchArgument(
-    #     'perception_param_file',
-    #     default_value=perception_param_file,
-    #     description='Path to config file for perception node'
-    # )
-    # perception_node = Node(
-    #     package='perception',
-    #     name='perception_node',
-    #     executable='perception_node',
-    #     parameters=[LaunchConfiguration('perception_param_file')],
-    # )
-    # ld.add_action(perception_param)
-    # ld.add_action(perception_node)
+    perception_param = DeclareLaunchArgument(
+        'perception_param_file',
+        default_value=perception_param_file,
+        description='Path to config file for perception node'
+    )
+    perception_node = Node(
+        package='perception',
+        name='perception_node',
+        executable='perception_node',
+        parameters=[LaunchConfiguration('perception_param_file')],
+    )
+    ld.add_action(perception_param)
+    ld.add_action(perception_node)
 
     # #################### Planner Node #####################
     # planner_pkg_prefix = get_package_share_directory('planner')

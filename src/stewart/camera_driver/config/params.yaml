@@ -1,9 +1,9 @@
 camera_driver_node:
   ros__parameters:
-    debug: true
+    debug: false
 
     frames_per_second: 30
-    compute_homography: true
+    compute_homography: false
 
     checkerboard_nx: 9
     checkerboard_ny: 9

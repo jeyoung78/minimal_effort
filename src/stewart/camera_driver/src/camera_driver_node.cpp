@@ -2,6 +2,7 @@
 #include <memory>
 #include <sstream>
 #include <unordered_set>
+#include <random>
 
 #include "camera_driver_node.hpp"
 
@@ -20,15 +21,12 @@ struct Point2fEqual {
 };
 
 CameraDriverNode::CameraDriverNode() : Node("camera_driver") {
-  // Initialize publisher
-  image_publisher_ = image_transport::create_publisher(this, "camera/image");
-
   this->declare_parameter<int>("frames_per_second", 30);
   this->declare_parameter<bool>("compute_homography", false);
   this->declare_parameter<bool>("debug", false);
-  this->declare_parameter<bool>("checkerboard_nx", false);
-  this->declare_parameter<bool>("checkerboard_ny", false);
-  this->declare_parameter<bool>("checkerboard_segment_length", false);
+  this->declare_parameter<int>("checkerboard_nx", false);
+  this->declare_parameter<int>("checkerboard_ny", false);
+  this->declare_parameter<double>("checkerboard_segment_length", false);
   frames_per_second_ = this->get_parameter("frames_per_second").as_int();
   compute_homography_ = this->get_parameter("compute_homography").as_bool();
   debug_ = this->get_parameter("debug").as_bool();
@@ -36,6 +34,11 @@ CameraDriverNode::CameraDriverNode() : Node("camera_driver") {
   checkerboard_ny_ = this->get_parameter("checkerboard_ny").as_int();
   checkerboard_segment_length_ = this->get_parameter("checkerboard_segment_length").as_double();
 
+  // Initialize publisher
+  image_publisher_ = image_transport::create_publisher(this, "camera/image");
+  if (compute_homography_) {
+    homography_publisher_ = this->create_publisher<cv_msgs::msg::HomographyStamped>("camera/homography", 30);
+  }
   if (debug_) {
     image_debug_publisher_ = image_transport::create_publisher(this, "camera/image_debug");
   }
@@ -75,12 +78,27 @@ void CameraDriverNode::publishFrame() {
     return;
   }
 
+  std_msgs::msg::Header header;
+  header.stamp = this->now();
+  header.frame_id = "platform";
+
   if (compute_homography_) {
-    frame = getHomography(frame);
+    cv::Mat homography = getHomography(frame);
+    cv_msgs::msg::HomographyStamped msg;
+    msg.header = header;
+
+    // Flatten the 3x3 matrix into a row-major array
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            msg.homography[i * 3 + j] = static_cast<double>(homography.at<double>(i, j));
+        }
+    }
+
+    homography_publisher_->publish(msg);
   }
 
   // Convert OpenCV image to ROS message
-  auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", frame).toImageMsg();
+  auto msg = cv_bridge::CvImage(header, "bgr8", frame).toImageMsg();
   image_publisher_.publish(msg);
 }
 
@@ -91,8 +109,45 @@ cv::Mat CameraDriverNode::getHomography(cv::Mat & frame) {
   std::vector<cv::Point2f> checker_vertices = detectCheckerVertices(binary);
   // Corrospond as many points to an ideal checkerboard pattern as possible using BFS and K-D Tree
   std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> ideal_checker_vertex_pairs = corrospondToIdealVertices(checker_vertices);
+
   // Calculate the homography matrix
-  cv::Mat homography = cv::getPerspectiveTransform(ideal_checker_vertex_pairs.first, ideal_checker_vertex_pairs.second);
+  cv::Mat homography = averageHomography(ideal_checker_vertex_pairs);
+
+  if (debug_) {
+    // Convert binary image to a 3-channel BGR image for color drawing
+    cv::Mat binary_with_contours;
+    cv::cvtColor(binary, binary_with_contours, cv::COLOR_GRAY2BGR);
+
+    for (const auto & point : checker_vertices) {
+      // Draw a circle at each corner point
+      cv::circle(binary_with_contours, point, 5, cv::Scalar(0, 255, 0), -1); // Green color
+    }
+
+    for (const auto & point : ideal_checker_vertex_pairs.first) {
+      // Draw a circle at each corner point
+      cv::circle(binary_with_contours, point, 5, cv::Scalar(255, 0, 0), -1); // Green color
+    }
+    auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", binary_with_contours).toImageMsg();
+    image_debug_publisher_.publish(msg);
+
+    // Represent the point in homogeneous coordinates
+    cv::Point2f input_point(82, 22);
+    cv::Mat point(3, 1, CV_64F);
+    point.at<double>(0, 0) = input_point.x; // x-coordinate
+    point.at<double>(1, 0) = input_point.y; // y-coordinate
+    point.at<double>(2, 0) = 1.0;           // homogeneous coordinate
+
+    // Transform the point using the homography matrix
+    cv::Mat transformed_point = homography * point;
+
+    // Convert back to Cartesian coordinates
+    double x_prime = transformed_point.at<double>(0, 0) / transformed_point.at<double>(2, 0);
+    double y_prime = transformed_point.at<double>(1, 0) / transformed_point.at<double>(2, 0);
+
+    // Print the result
+    RCLCPP_INFO(this->get_logger(), "Input Point: ( %f %f )", input_point.x, input_point.y);
+    RCLCPP_INFO(this->get_logger(), "Transformed Point:  ( %f %f )", x_prime, y_prime);
+  }
   
   return homography;
 }
@@ -129,22 +184,6 @@ std::vector<cv::Point2f> CameraDriverNode::detectCheckerVertices(const cv::Mat& 
     }
   }
 
-  if (debug_) {
-    // Convert binary image to a 3-channel BGR image for color drawing
-    cv::Mat binary_with_contours;
-    cv::cvtColor(binary, binary_with_contours, cv::COLOR_GRAY2BGR);
-
-    // Draw contours in red
-    cv::drawContours(binary_with_contours, contours, -1, cv::Scalar(0, 0, 255), 2);
-
-    for (const auto & point : checker_vertices) {
-      // Draw a circle at each corner point
-      cv::circle(binary_with_contours, point, 5, cv::Scalar(0, 255, 0), -1); // Green color
-    }
-    auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", binary_with_contours).toImageMsg();
-    image_debug_publisher_.publish(msg);
-  }
-  
   return checker_vertices;
 }
 
@@ -190,29 +229,45 @@ std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::c
     query.at<float>(0, 0) = corner.x;
     query.at<float>(0, 1) = corner.y;
 
-    kdtree.knnSearch(query, indices, dists, 2); // Find 2 closest points
+    kdtree.knnSearch(query, indices, dists, 3); // Find 2 closest points (the first is itself)
 
     // Compute traversal directions and starting point
-    cv::Point2f dir_row = checker_vertices[indices[0]] - corner;
-    cv::Point2f dir_col = checker_vertices[indices[1]] - corner;
+    cv::Point2f dir_row = checker_vertices[indices[1]] - corner; // direction to traverse across a row
+    cv::Point2f dir_col = checker_vertices[indices[2]] - corner; // direction to traverse across a column
+
+    if (abs(dir_col.x) > abs(dir_col.y)) { // swap in case if the column direction is actually the row direction
+      cv::Point2f temp = dir_col;
+      dir_col = dir_row;
+      dir_row = temp;
+    }
     cv::Point2f starting_point;
+    int starting_nx;
+    int starting_ny;
 
     if (corner == top_left) {
       starting_point = cv::Point2f(0, 0);
+      starting_nx = 0;
+      starting_ny = 0;
     }
     else if (corner == bottom_right) {
-      starting_point = cv::Point2f(checkerboard_nx_ * checkerboard_segment_length_, checkerboard_nx_ * checkerboard_segment_length_);
+      starting_point = cv::Point2f(checkerboard_nx_ * checkerboard_segment_length_, checkerboard_ny_ * checkerboard_segment_length_);
+      starting_nx = checkerboard_nx_;
+      starting_ny = checkerboard_ny_;
     }
     else if (corner == top_right) {
       starting_point = cv::Point2f(checkerboard_nx_ * checkerboard_segment_length_, 0);
+      starting_nx = checkerboard_nx_;
+      starting_ny = 0;
     }
     else if (corner == bottom_left) {
-      starting_point = cv::Point2f(0, checkerboard_nx_ * checkerboard_segment_length_);
+      starting_point = cv::Point2f(0, checkerboard_ny_ * checkerboard_segment_length_);
+      starting_nx = 0;
+      starting_ny = checkerboard_ny_;
     }
 
     // Step 4: BFS to traverse the grid
     std::queue<std::tuple<cv::Point2f, cv::Point2f, int, int>> q; // Store current point and its ideal location
-    q.push({top_left, starting_point, 0, 0});
+    q.push({top_left, starting_point, starting_nx, starting_ny});
 
     std::unordered_set<cv::Point2f, Point2fHash, Point2fEqual> visited;
 
@@ -276,6 +331,59 @@ std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::c
   return checker_vertex_pairs;
 }
 
+cv::Mat CameraDriverNode::averageHomography(const std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>>& point_pairs) {
+  int num_samples = 100; // Number of random samples
+  const auto& source_points = point_pairs.first;         // Source points
+  const auto& destination_points = point_pairs.second;   // Destination points
+
+  if (source_points.size() < 4 || destination_points.size() < 4) {
+      throw std::runtime_error("At least 4 point pairs are required to compute a homography.");
+  }
+
+  if (source_points.size() != destination_points.size()) {
+      throw std::runtime_error("Source and destination point sets must have the same number of points.");
+  }
+
+  size_t num_points = source_points.size();
+  cv::Mat homography_sum = cv::Mat::zeros(3, 3, CV_64F);
+  int homography_count = 0;
+
+  // Random generator setup
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(0, static_cast<int>(num_points) - 1);
+
+  for (int sample = 0; sample < num_samples; ++sample) {
+    // Randomly select 4 unique indices
+    std::set<int> unique_indices;
+    while (unique_indices.size() < 4) {
+      unique_indices.insert(dis(gen));
+    }
+
+    // Extract the 4 random point pairs
+    std::vector<cv::Point2f> subset_source, subset_destination;
+    for (int idx : unique_indices) {
+      subset_source.push_back(source_points[idx]);
+      subset_destination.push_back(destination_points[idx]);
+    }
+
+    // Compute the homography for this subset
+    cv::Mat H = cv::getPerspectiveTransform(subset_source, subset_destination);
+
+    // Accumulate the homography
+    homography_sum += H;
+    homography_count++;
+  }
+
+  // Compute the average homography
+  cv::Mat averaged_homography = homography_sum / static_cast<double>(homography_count);
+
+  // Normalize the homography matrix to ensure consistent scaling
+  averaged_homography /= averaged_homography.at<double>(2, 2);
+
+  return averaged_homography;
+}
+
 cv::flann::Index CameraDriverNode::buildKDTree(const std::vector<cv::Point2f>& checker_vertices) {
   cv::Mat data(checker_vertices.size(), 2, CV_32F);
   for (size_t i = 0; i < checker_vertices.size(); ++i) {
@@ -283,7 +391,7 @@ cv::flann::Index CameraDriverNode::buildKDTree(const std::vector<cv::Point2f>& c
     data.at<float>(i, 1) = checker_vertices[i].y;
   }
 
-  return cv::flann::Index(data, cv::flann::KDTreeIndexParams(1));
+  return cv::flann::Index(data, cv::flann::KDTreeIndexParams(1)); // 1 tree for simplicity
 }
 
 int main(int argc, char ** argv)

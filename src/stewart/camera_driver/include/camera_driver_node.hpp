@@ -3,6 +3,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include <sensor_msgs/msg/image.hpp>
+#include <cv_msgs/msg/homography_stamped.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.hpp>
 #include <opencv2/opencv.hpp>
@@ -20,6 +21,7 @@ class CameraDriverNode : public rclcpp::Node {
     cv::Mat preprocessImage(const cv::Mat& frame);
     std::vector<cv::Point2f> detectCheckerVertices(const cv::Mat& binary);
     std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> corrospondToIdealVertices(const std::vector<cv::Point2f>& checker_vertices);
+    cv::Mat averageHomography(const std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>>& point_pairs);
 
     cv::flann::Index buildKDTree(const std::vector<cv::Point2f>& checker_vertices);
     
@@ -35,6 +37,8 @@ class CameraDriverNode : public rclcpp::Node {
 
     image_transport::Publisher image_publisher_;
     image_transport::Publisher image_debug_publisher_;
+    rclcpp::Publisher<cv_msgs::msg::HomographyStamped>::SharedPtr homography_publisher_;
+
     cv::VideoCapture cap_;
     rclcpp::TimerBase::SharedPtr timer_;
 };
