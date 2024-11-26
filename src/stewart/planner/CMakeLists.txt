@@ -13,13 +13,14 @@ endif()
 # Search for dependencies required for building this package
 find_package(ament_cmake REQUIRED) # ROS2 build tool
 find_package(rclcpp REQUIRED)      # ROS2 C++ package
+find_package(stewart_msgs)
 
 # Create ROS2 node executable from source files
 add_executable(planner_node src/planner_node.cpp)
 target_include_directories(planner_node
   PUBLIC include)
 # Add ROS2 dependencies required by package
-ament_target_dependencies(planner_node rclcpp)
+ament_target_dependencies(planner_node rclcpp stewart_msgs)
 
 # Copy executable to installation location
 install(TARGETS
