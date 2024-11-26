@@ -60,7 +60,7 @@ geometry_msgs::msg::Vector3 ControlNode::checkValidNormVector(
   double z = normVector.z;
 
   // Check if normVector is a unit vector
-  double normVectorLength = pow(x, 2) + pow(y, 2) * pow(z, 2);
+  double normVectorLength = pow(x, 2) + pow(y, 2) + pow(z, 2);
   if ((normVectorLength < 1 - NORM_VECTOR_THRESHOLD) || (normVectorLength > 1 + NORM_VECTOR_THRESHOLD))
   {
     // Adjust Vector to be a unit vector
@@ -80,7 +80,7 @@ geometry_msgs::msg::Vector3 ControlNode::checkValidNormVector(
     y = boundryRadius * sin(angle);
     z = NORMAL_Z;
   }
-
+  
   // Output Msg
   geometry_msgs::msg::Vector3 outputNorm;
   outputNorm.x = x;
