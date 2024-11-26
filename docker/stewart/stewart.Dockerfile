@@ -16,9 +16,9 @@ COPY src/stewart/control control
 # Scan for rosdeps
 RUN apt-get -qq update && rosdep update && \
     rosdep install --from-paths . --ignore-src -r -s \
-        | grep 'apt-get install' \
-        | awk '{print $3}' \
-        | sort  > /tmp/colcon_install_list
+    | grep 'apt-get install' \
+    | awk '{print $3}' \
+    | sort  > /tmp/colcon_install_list
 
 ################################# Dependencies ################################
 FROM ${BASE_IMAGE} AS dependencies
@@ -27,7 +27,8 @@ ENV AMENT_WS=/home/pi/ament_ws
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     rm -rf /var/lib/apt/lists/* && \
-    add-apt-repository universe
+    add-apt-repository universe && \
+    apt-get install -y i2c-tools libi2c-dev
 
 # Install Rosdep requirements
 COPY --from=source /tmp/colcon_install_list /tmp/colcon_install_list
@@ -51,7 +52,7 @@ ARG MINIMAL_EFFORT_INSTALL=/opt/minimal_effort/
 WORKDIR ${AMENT_WS}
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build \
-        --cmake-args -DCMAKE_BUILD_TYPE=Release --install-base ${MINIMAL_EFFORT_INSTALL}
+    --cmake-args -DCMAKE_BUILD_TYPE=Release --install-base ${MINIMAL_EFFORT_INSTALL}
 
 # Source and Build Artifact Cleanup 
 RUN rm -rf src/* build/* devel/* install/* log/*
