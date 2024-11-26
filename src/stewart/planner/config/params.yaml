@@ -1,0 +1,16 @@
+planner_node:
+  ros__parameters:
+    debug: true
+
+    kp: 0.1
+    ki: 0.1
+    kd: 0.1
+    k: 0.1
+
+
+    frames_per_second: 30
+    compute_homography: true
+
+    checkerboard_nx: 9
+    checkerboard_ny: 9
+    checkerboard_segment_length: 0.02235

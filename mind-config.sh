@@ -13,7 +13,7 @@
 ##   - vis_tools        :   starts tools for data visualization (foxglove)
 ##   - stewart          :   starts stewart platform
 
-ACTIVE_MODULES="stewart vis_tools"
+ACTIVE_MODULES="stewart"
 
 ################################# MODE OF OPERATION #################################
 ## Possible modes of operation when running mind.
@@ -25,11 +25,11 @@ MODE_OF_OPERATION="develop"
 
 ############################## ADVANCED CONFIGURATIONS ##############################
 ## Name to append to docker containers. DEFAULT = "<your_watcloud_username>"
-COMPOSE_PROJECT_NAME="eddy"
+COMPOSE_PROJECT_NAME="bishneet"
 
 ## Tag to use. Images are formatted as <IMAGE_NAME>:<TAG> with forward slashes replaced with dashes.
 ## DEFAULT = "<your_current_github_branch>"
-TAG="eddy"
+TAG="bishneet"
 
 # Docker Registry to pull/push images. DEFAULT = "ghcr.io/watonomous/wato_monorepo"
 # REGISTRY_URL=""
