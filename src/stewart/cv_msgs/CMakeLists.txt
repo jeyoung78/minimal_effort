@@ -20,6 +20,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(cv_msgs
   "msg/HomographyStamped.msg"
+  "msg/BallDetectionStamped.msg"
   DEPENDENCIES std_msgs
 )
 
