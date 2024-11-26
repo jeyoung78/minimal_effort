@@ -10,23 +10,23 @@ def generate_launch_description():
     ld = LaunchDescription() # Begin building a launch description
 
     #################### Camera Driver Node #####################
-    camera_driver_pkg_prefix = get_package_share_directory('camera_driver')
-    camera_driver_param_file = os.path.join(
-        camera_driver_pkg_prefix, 'config', 'params.yaml')
+    # camera_driver_pkg_prefix = get_package_share_directory('camera_driver')
+    # camera_driver_param_file = os.path.join(
+    #     camera_driver_pkg_prefix, 'config', 'params.yaml')
     
-    camera_driver_param = DeclareLaunchArgument(
-        'camera_driver_param_file',
-        default_value=camera_driver_param_file,
-        description='Path to config file for perception node'
-    )
-    camera_driver_node = Node(
-        package='camera_driver',
-        name='camera_driver_node',
-        executable='camera_driver_node',
-        parameters=[LaunchConfiguration('camera_driver_param_file')],
-    )
-    ld.add_action(camera_driver_param)
-    ld.add_action(camera_driver_node)
+    # camera_driver_param = DeclareLaunchArgument(
+    #     'camera_driver_param_file',
+    #     default_value=camera_driver_param_file,
+    #     description='Path to config file for perception node'
+    # )
+    # camera_driver_node = Node(
+    #     package='camera_driver',
+    #     name='camera_driver_node',
+    #     executable='camera_driver_node',
+    #     parameters=[LaunchConfiguration('camera_driver_param_file')],
+    # )
+    # ld.add_action(camera_driver_param)
+    # ld.add_action(camera_driver_node)
 
     # #################### Perception Node #####################
     # perception_pkg_prefix = get_package_share_directory('perception')
@@ -67,22 +67,22 @@ def generate_launch_description():
     # ld.add_action(planner_node)
 
     # #################### Control Node #####################
-    # control_pkg_prefix = get_package_share_directory('control')
-    # control_param_file = os.path.join(
-    #     control_pkg_prefix, 'config', 'params.yaml')
+    control_pkg_prefix = get_package_share_directory('control')
+    control_param_file = os.path.join(
+        control_pkg_prefix, 'config', 'params.yaml')
     
-    # control_param = DeclareLaunchArgument(
-    #     'control_param_file',
-    #     default_value=control_param_file,
-    #     description='Path to config file for control node'
-    # )
-    # control_node = Node(
-    #     package='control',
-    #     name='control_node',
-    #     executable='control_node',
-    #     parameters=[LaunchConfiguration('control_param_file')],
-    # )
-    # ld.add_action(control_param)
-    # ld.add_action(control_node)
+    control_param = DeclareLaunchArgument(
+        'control_param_file',
+        default_value=control_param_file,
+        description='Path to config file for control node'
+    )
+    control_node = Node(
+        package='control',
+        name='control_node',
+        executable='control_node',
+        parameters=[LaunchConfiguration('control_param_file')],
+    )
+    ld.add_action(control_param)
+    ld.add_action(control_node)
 
     return ld

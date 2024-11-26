@@ -3,9 +3,10 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-class PlannerNode : public rclcpp::Node {
-  public:
-    PlannerNode();
+class PlannerNode : public rclcpp::Node
+{
+public:
+  PlannerNode();
 };
 
-#endif 
+#endif
