@@ -17,7 +17,7 @@ class CameraDriverNode : public rclcpp::Node {
     void publishFrame();
 
     cv::Mat getHomography(cv::Mat& frame);
-    cv::Mat preprocessmage(const cv::Mat& frame);
+    cv::Mat preprocessImage(const cv::Mat& frame);
     std::vector<cv::Point2f> detectCheckerVertices(const cv::Mat& binary);
     std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> corrospondToIdealVertices(const std::vector<cv::Point2f>& checker_vertices);
 

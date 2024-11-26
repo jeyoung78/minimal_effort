@@ -1,8 +1,23 @@
 #include <chrono>
 #include <memory>
 #include <sstream>
+#include <unordered_set>
 
 #include "camera_driver_node.hpp"
+
+// Define a hash function for cv::Point2f
+struct Point2fHash {
+    size_t operator()(const cv::Point2f& point) const {
+        return std::hash<float>()(point.x) ^ (std::hash<float>()(point.y) << 1);
+    }
+};
+
+// Define an equality operator for cv::Point2f
+struct Point2fEqual {
+    bool operator()(const cv::Point2f& a, const cv::Point2f& b) const {
+        return std::abs(a.x - b.x) < 1e-5 && std::abs(a.y - b.y) < 1e-5;
+    }
+};
 
 CameraDriverNode::CameraDriverNode() : Node("camera_driver") {
   // Initialize publisher
@@ -135,8 +150,8 @@ std::vector<cv::Point2f> CameraDriverNode::detectCheckerVertices(const cv::Mat& 
 
 std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::corrospondToIdealVertices(const std::vector<cv::Point2f>& checker_vertices) {
   std::pair<std::vector<cv::Point2f>, std::vector<cv::Point2f>> checker_vertex_pairs;
-  std::vector<cv::Point2f>& ideal_checker_vertices;
-  std::vector<cv::Point2f>& nonideal_checker_vertices;
+  std::vector<cv::Point2f> ideal_checker_vertices;
+  std::vector<cv::Point2f> nonideal_checker_vertices;
 
   // Step 1: Build k-d Tree
   cv::flann::Index kdtree = buildKDTree(checker_vertices);
@@ -163,7 +178,7 @@ std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::c
     bottom_right, 
     top_right,
     bottom_left
-  }
+  };
 
   for (const auto& corner : corners) {
     bool valid_corner = true;
@@ -196,10 +211,10 @@ std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::c
     }
 
     // Step 4: BFS to traverse the grid
-    std::queue<std::pair<cv::Point2f, cv::Point2f>> q; // Store current point and its ideal location
+    std::queue<std::tuple<cv::Point2f, cv::Point2f, int, int>> q; // Store current point and its ideal location
     q.push({top_left, starting_point, 0, 0});
 
-    std::set<cv::Point2f> visited;
+    std::unordered_set<cv::Point2f, Point2fHash, Point2fEqual> visited;
 
     while (!q.empty()) {
       auto [current_point, ideal_point, grid_point_x, grid_point_y] = q.front();
@@ -242,7 +257,7 @@ std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::c
             grid_point_y--;
             if (grid_point_y < 0) { valid_corner = false; }
           }
-          q.push({closest_point, new_ideal_point});
+          q.push({closest_point, new_ideal_point, grid_point_x, grid_point_y});
         }
       }
     }
@@ -262,10 +277,10 @@ std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> CameraDriverNode::c
 }
 
 cv::flann::Index CameraDriverNode::buildKDTree(const std::vector<cv::Point2f>& checker_vertices) {
-  cv::Mat data(tag_corners.size(), 2, CV_32F);
-  for (size_t i = 0; i < tag_corners.size(); ++i) {
-    data.at<float>(i, 0) = tag_corners[i].x;
-    data.at<float>(i, 1) = tag_corners[i].y;
+  cv::Mat data(checker_vertices.size(), 2, CV_32F);
+  for (size_t i = 0; i < checker_vertices.size(); ++i) {
+    data.at<float>(i, 0) = checker_vertices[i].x;
+    data.at<float>(i, 1) = checker_vertices[i].y;
   }
 
   return cv::flann::Index(data, cv::flann::KDTreeIndexParams(1));
