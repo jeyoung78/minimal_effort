@@ -7,6 +7,7 @@ ENV AMENT_WS=/home/pi/ament_ws
 WORKDIR ${AMENT_WS}/src
 
 # Copy in source code
+COPY src/stewart/cv_msgs cv_msgs
 COPY src/stewart/bringup_stewart bringup_stewart
 COPY src/stewart/camera_driver camera_driver
 COPY src/stewart/perception perception

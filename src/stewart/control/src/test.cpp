@@ -40,7 +40,7 @@ int angleToPWMReversed(int desiredAngle, int angleOffset)
 int offsetThetaPulse(int motorNumber, int theta)
 {
     int offsetThetaPulse = 0;
-    int offset = 15;
+    int offset = 0;
     switch (motorNumber)
     {
     case 1:
@@ -301,11 +301,11 @@ int main()
             usleep(100000); // Wait before changing direction
         }
 
-        // setPWM(file, 0, 0, angleToPWM(0, 15));
-        // setPWM(file, 1, 0, angleToPWM(0, 15));
-        // setPWM(file, 2, 0, angleToPWMReversed(0, 15));
-        // setPWM(file, 3, 0, angleToPWMReversed(0, 15));
-        // usleep(1000000);
+        setPWM(file, 0, 0, angleToPWM(0, 15));
+        setPWM(file, 1, 0, angleToPWM(0, 15));
+        setPWM(file, 2, 0, angleToPWMReversed(0, 15));
+        setPWM(file, 3, 0, angleToPWMReversed(0, 15));
+        usleep(1000000);
     }
 
     close(file);

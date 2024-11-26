@@ -6,24 +6,35 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/flann.hpp>
+#include <opencv2/core.hpp>
 
 class CameraDriverNode : public rclcpp::Node {
   public:
     CameraDriverNode();
   
   private:
-    void publish_frame();
+    void publishFrame();
 
-    cv::Mat do_perspective_transform(cv::Mat& frame);
-    cv::Mat preprocessImage(const cv::Mat& frame);
-    std::vector<cv::Point2f> detectTagCorners(const cv::Mat& binary);
-    std::vector<cv::Point2f> findBoardCorners(const std::vector<cv::Point2f>& tag_corners);
-    cv::Mat warpBoard(const cv::Mat& frame, const std::vector<cv::Point2f>& board_corners);
+    cv::Mat getHomography(cv::Mat& frame);
+    cv::Mat preprocessmage(const cv::Mat& frame);
+    std::vector<cv::Point2f> detectCheckerVertices(const cv::Mat& binary);
+    std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> corrospondToIdealVertices(const std::vector<cv::Point2f>& checker_vertices);
 
+    cv::flann::Index buildKDTree(const std::vector<cv::Point2f>& checker_vertices);
+    
     int frames_per_second_;
-    bool enable_perspective_transform_;
+    bool compute_homography_;
+    bool debug_;
+
+    int checkerboard_nx_;
+    int checkerboard_ny_;
+    double checkerboard_segment_length_;
+
+    cv::flann::Index kdtree;
 
     image_transport::Publisher image_publisher_;
+    image_transport::Publisher image_debug_publisher_;
     cv::VideoCapture cap_;
     rclcpp::TimerBase::SharedPtr timer_;
 };

@@ -1,4 +1,10 @@
 camera_driver_node:
   ros__parameters:
+    debug: true
+
     frames_per_second: 30
-    enable_perspective_transform: false
+    compute_homography: true
+
+    checkerboard_nx: 9
+    checkerboard_ny: 9
+    checkerboard_segment_length: 0.02235
