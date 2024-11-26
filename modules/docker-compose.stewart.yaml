@@ -1,5 +1,5 @@
 services:
-  stewart: 
+  stewart:
     build: &stewart_build
       context: ..
       dockerfile: docker/stewart/stewart.Dockerfile
@@ -13,7 +13,8 @@ services:
     devices:
       - /dev/video0
       - /dev/video1
-  
+      - /dev/i2c-1
+
   stewart_dev:
     build: *stewart_build
     image: "stewart_image:dev_${TAG}"
@@ -25,3 +26,4 @@ services:
     devices:
       - /dev/video0
       - /dev/video1
+      - /dev/i2c-1
