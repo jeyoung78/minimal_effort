@@ -20,8 +20,6 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(stewart_msgs
   "msg/HomographyStamped.msg"
-  "msg/BallDetectionStamped.msg"
-  "msg/BallGoalStamped.msg"
   DEPENDENCIES std_msgs
 )
 
