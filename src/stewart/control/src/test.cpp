@@ -294,17 +294,17 @@ int main()
                 pulses.emplace_back(offsetThPulse);
             }
 
-            setPWM(file, 0, 0, pulses[0]);
-            setPWM(file, 1, 0, pulses[1]);
-            setPWM(file, 2, 0, pulses[2]);
-            setPWM(file, 3, 0, pulses[3]);
+            // setPWM(file, 0, 0, pulses[0]);
+            // setPWM(file, 1, 0, pulses[1]);
+            // setPWM(file, 2, 0, pulses[2]);
+            // setPWM(file, 3, 0, pulses[3]);
             usleep(100000); // Wait before changing direction
         }
 
-        setPWM(file, 0, 0, angleToPWM(0, 15));
-        setPWM(file, 1, 0, angleToPWM(0, 15));
-        setPWM(file, 2, 0, angleToPWMReversed(0, 15));
-        setPWM(file, 3, 0, angleToPWMReversed(0, 15));
+        // setPWM(file, 0, 0, angleToPWM(0, 15));
+        // setPWM(file, 1, 0, angleToPWM(0, 15));
+        // setPWM(file, 2, 0, angleToPWMReversed(0, 15));
+        // setPWM(file, 3, 0, angleToPWMReversed(0, 15));
         usleep(1000000);
     }
 

@@ -72,8 +72,9 @@ geometry_msgs::msg::Vector3 ControlNode::checkValidNormVector(
   // Check if normVector is within cone boundry
   // Calculate the radius of the cone boundry
   double boundryRadius = sqrt(1 - pow(NORMAL_Z, 2));
-  if ((pow(x, 2) + pow(y, 2)) < boundryRadius)
+  if (sqrt(pow(x, 2) + pow(y, 2)) > boundryRadius)
   {
+    RCLCPP_WARN(this->get_logger(), "Command unit normal vector is outside allowable operational boundary.");
     // Outside the viable radius of normal vectors, must adjust so its within bounds
     double angle = atan2(y, x);
     x = boundryRadius * cos(angle);
@@ -264,7 +265,7 @@ int ControlNode::offsetThetaPulse(
     int theta)
 {
   int offsetThetaPulse = 0;
-  int offset = 15;
+  int offset = 0;
   switch (motorNumber)
   {
   case 1:

@@ -38,12 +38,14 @@ private:
   // PID Integrals
   double integralX = 0;
   double integralY = 0;
+  // std::vector<double> integral_vector_x;
+  // std::vector<double> integral_vector_y;
 
   // PID Parameters
-  double kp;
-  double ki;
-  double kd;
-  double k;
+  double kp_;
+  double ki_;
+  double kd_;
+  double k_;
 };
 
 #endif

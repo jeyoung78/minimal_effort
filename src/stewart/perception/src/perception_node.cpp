@@ -1,5 +1,6 @@
 #include "perception_node.hpp"
 #include <cv_bridge/cv_bridge.h>
+#include <cmath>
 
 PerceptionNode::PerceptionNode() : Node("perception_node") {
     image_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
@@ -59,25 +60,29 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
     cv::cvtColor(frame, hsv_image, cv::COLOR_BGR2HSV);
 
     // Define the HSV range for an orange ping pong ball
-    cv::Scalar lower_orange(3, 185, 109);  // Lower bound of orange
-    cv::Scalar upper_orange(43, 255, 229); // Upper bound of orange
+    cv::Scalar lower_orange(0, 150, 80);  // Lower bound of orange
+    cv::Scalar upper_orange(150, 255, 255); // Upper bound of orange
 
     // Threshold the HSV image to get only orange colors
     cv::Mat mask;
     cv::inRange(hsv_image, lower_orange, upper_orange, mask);
 
+    // Find contours of the thresholded image
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
     // Publish the debug image (mask)
     try {
-        auto debug_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", mask).toImageMsg();
+        // Draw contours on the original frame
+        cv::Mat debug_frame = frame.clone(); // Clone the original frame for visualization
+        cv::drawContours(debug_frame, contours, -1, cv::Scalar(0, 255, 0), 2); // Draw all contours in green with a thickness of 2
+        
+        auto debug_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", debug_frame).toImageMsg();
         debug_msg->header.stamp = this->get_clock()->now();
         debug_image_publisher_->publish(*debug_msg);
     } catch (cv_bridge::Exception &e) {
         RCLCPP_ERROR(this->get_logger(), "cv_bridge exception when publishing debug image: %s", e.what());
     }
-
-    // Find contours of the thresholded image
-    std::vector<std::vector<cv::Point>> contours;
-    cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
     if (!contours.empty()) {
         // Find the largest contour (assuming it's the ball)
@@ -91,7 +96,7 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
         double radius = std::sqrt(area / CV_PI); // Approximate radius from area
 
         // Define minimum and maximum radius thresholds
-        const double MIN_RADIUS = 30.0; // Adjust this based on your application
+        const double MIN_RADIUS = 20.0; // Adjust this based on your application
         const double MAX_RADIUS = 50.0; // Adjust this based on your application
 
         // Only proceed if the radius is within the desired range
@@ -127,49 +132,33 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
             odometry_msg.header.frame_id = "camera_frame";
             odometry_msg.child_frame_id = "ball";
 
-             // Fill pose
-            odometry_msg.pose.pose.position.x = estimated.at<float>(0); // Smoothed x
-            odometry_msg.pose.pose.position.y = estimated.at<float>(1); // Smoothed y
+            // Fill pose
+            // double x = estimated.at<float>(0) - 300;
+            // double y = estimated.at<float>(1) - 220;
+            double x = cx - 300;
+            double y = cy - 220;
+            double theta = -45 * M_PI / 180;
+
+            odometry_msg.pose.pose.position.x = -x*cos(theta) + y*sin(theta); // Smoothed x
+            odometry_msg.pose.pose.position.y = x*sin(theta) + y*cos(theta); // Smoothed y
             odometry_msg.pose.pose.position.z = 0.0;
 
             // Orientation (dummy value)
             odometry_msg.pose.pose.orientation.w = 1.0;
 
-            // Pose covariance (extract x-y position covariances)
-            odometry_msg.pose.covariance[0] = P.at<float>(0, 0); // Variance of x
-            odometry_msg.pose.covariance[1] = P.at<float>(0, 1); // Covariance of x-y
-            odometry_msg.pose.covariance[6] = P.at<float>(1, 0); // Covariance of y-x
-            odometry_msg.pose.covariance[7] = P.at<float>(1, 1); // Variance of y
-            // Remaining values can be set to high uncertainty as they are unused
-            odometry_msg.pose.covariance[14] = 1e6; // Variance of z
-            odometry_msg.pose.covariance[21] = 1e6; // Variance of roll
-            odometry_msg.pose.covariance[28] = 1e6; // Variance of pitch
-            odometry_msg.pose.covariance[35] = 1e6; // Variance of yaw
-
-            // Twist covariance (extract x-y velocity covariances)
-            odometry_msg.twist.twist.linear.x = velocity_x;
-            odometry_msg.twist.twist.linear.y = velocity_y;
-            odometry_msg.twist.twist.linear.z = 0.0;
-
-            odometry_msg.twist.covariance[0] = P.at<float>(2, 2); // Variance of vx
-            odometry_msg.twist.covariance[1] = P.at<float>(2, 3); // Covariance of vx-vy
-            odometry_msg.twist.covariance[6] = P.at<float>(3, 2); // Covariance of vy-vx
-            odometry_msg.twist.covariance[7] = P.at<float>(3, 3); // Variance of vy
-            // Remaining values can be set to high uncertainty
-            odometry_msg.twist.covariance[14] = 1e6; // Variance of vz
-            odometry_msg.twist.covariance[21] = 1e6; // Variance of angular roll
-            odometry_msg.twist.covariance[28] = 1e6; // Variance of angular pitch
-            odometry_msg.twist.covariance[35] = 1e6; // Variance of angular yaw
-
             odometry_publisher_->publish(odometry_msg);
 
-            RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+            RCLCPP_INFO(this->get_logger(),
                         "Predicted ball position: x=%.2f, y=%.2f | Velocity: vx=%.2f, vy=%.2f",
-                        estimated.at<float>(0), estimated.at<float>(1),
+                        odometry_msg.pose.pose.position.x, odometry_msg.pose.pose.position.y,
                         velocity_x, velocity_y);
         } else {
-            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+            RCLCPP_WARN(this->get_logger(),
                         "Contour rejected: radius=%.2f (not within [%.2f, %.2f])", radius, MIN_RADIUS, MAX_RADIUS);
+
+            auto odometry_msg = nav_msgs::msg::Odometry();
+            odometry_msg.pose.pose.orientation.w = -1.0;
+            odometry_publisher_->publish(odometry_msg);
         }
     }
 }

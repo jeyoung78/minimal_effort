@@ -1,16 +1,24 @@
 planner_node:
   ros__parameters:
-    debug: true
+    kp: 0.065
+    ki: 0.054
+    kd: 0.024
+    k: 1.0
 
-    kp: 0.1
-    ki: 0.1
-    kd: 0.1
-    k: 0.1
+    # ok tune (with kalmann filter) ----vv-----
+    # kp: 0.045
+    # ki: 0.036
+    # kd: 0.035
+    # k: 1.0
 
+    # initial tune (slow) 
+    # kp: 0.011
+    # ki: 0.010
+    # kd: 0.025
+    # k: 1.0
 
-    frames_per_second: 30
-    compute_homography: true
-
-    checkerboard_nx: 9
-    checkerboard_ny: 9
-    checkerboard_segment_length: 0.02235
+    # damped, but steady state error 
+    # kp: 0.035
+    # ki: 0.008
+    # kd: 0.015
+    # k: 1.0

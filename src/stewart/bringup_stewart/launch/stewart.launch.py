@@ -48,41 +48,41 @@ def generate_launch_description():
     ld.add_action(perception_node)
 
     # #################### Planner Node #####################
-    # planner_pkg_prefix = get_package_share_directory('planner')
-    # planner_param_file = os.path.join(
-    #     planner_pkg_prefix, 'config', 'params.yaml')
+    planner_pkg_prefix = get_package_share_directory('planner')
+    planner_param_file = os.path.join(
+        planner_pkg_prefix, 'config', 'params.yaml')
     
-    # planner_param = DeclareLaunchArgument(
-    #     'planner_param_file',
-    #     default_value=planner_param_file,
-    #     description='Path to config file for planner node'
-    # )
-    # planner_node = Node(
-    #     package='planner',
-    #     name='planner_node',
-    #     executable='planner_node',
-    #     parameters=[LaunchConfiguration('planner_param_file')],
-    # )
-    # ld.add_action(planner_param)
-    # ld.add_action(planner_node)
+    planner_param = DeclareLaunchArgument(
+        'planner_param_file',
+        default_value=planner_param_file,
+        description='Path to config file for planner node'
+    )
+    planner_node = Node(
+        package='planner',
+        name='planner_node',
+        executable='planner_node',
+        parameters=[LaunchConfiguration('planner_param_file')],
+    )
+    ld.add_action(planner_param)
+    ld.add_action(planner_node)
 
     # #################### Control Node #####################
-    # control_pkg_prefix = get_package_share_directory('control')
-    # control_param_file = os.path.join(
-    #     control_pkg_prefix, 'config', 'params.yaml')
+    control_pkg_prefix = get_package_share_directory('control')
+    control_param_file = os.path.join(
+        control_pkg_prefix, 'config', 'params.yaml')
     
-    # control_param = DeclareLaunchArgument(
-    #     'control_param_file',
-    #     default_value=control_param_file,
-    #     description='Path to config file for control node'
-    # )
-    # control_node = Node(
-    #     package='control',
-    #     name='control_node',
-    #     executable='control_node',
-    #     parameters=[LaunchConfiguration('control_param_file')],
-    # )
-    # ld.add_action(control_param)
-    # ld.add_action(control_node)
+    control_param = DeclareLaunchArgument(
+        'control_param_file',
+        default_value=control_param_file,
+        description='Path to config file for control node'
+    )
+    control_node = Node(
+        package='control',
+        name='control_node',
+        executable='control_node',
+        parameters=[LaunchConfiguration('control_param_file')],
+    )
+    ld.add_action(control_param)
+    ld.add_action(control_node)
 
     return ld
