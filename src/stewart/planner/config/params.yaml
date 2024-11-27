@@ -1,9 +1,36 @@
 planner_node:
   ros__parameters:
-    kp: 0.065
-    ki: 0.054
-    kd: 0.024
+    kp: 0.068
+    ki: 0.001
+    kd: 0.035
     k: 1.0
+
+    # 2nd iter of stack overflow
+    # kp: 0.075
+    # ki: 0.00
+    # kd: 0.035
+
+    # no oscillation
+    # kp: 0.025
+    # ki: 0.00
+    # kd: 0.029
+    # k: 1.0
+
+    derivative_thresh: 40.0
+
+    # decent tune, kp too high
+    # kp: 0.065
+    # ki: 0.058
+    # kd: 0.026
+    # k: 1.0
+
+    # derivative_thresh: 20.0
+
+    # decent tune, just hits a peak
+    # kp: 0.065
+    # ki: 0.054
+    # kd: 0.024
+    # k: 1.0
 
     # ok tune (with kalmann filter) ----vv-----
     # kp: 0.045

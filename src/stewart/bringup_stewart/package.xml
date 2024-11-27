@@ -12,6 +12,7 @@
   <!-- <depend>camera_driver</depend> -->
   <depend>camera_driver</depend>
   <depend>control</depend>
+  <depend>trajectory</depend>
   <depend>planner</depend>
   <depend>perception</depend>
 

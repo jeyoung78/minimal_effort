@@ -46,6 +46,7 @@ private:
   double ki_;
   double kd_;
   double k_;
+  double derivative_thresh_;
 };
 
 #endif

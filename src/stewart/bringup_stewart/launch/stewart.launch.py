@@ -48,6 +48,26 @@ def generate_launch_description():
     ld.add_action(perception_node)
 
     # #################### Planner Node #####################
+    trajectory_pkg_prefix = get_package_share_directory('trajectory')
+    trajectory_param_file = os.path.join(
+        trajectory_pkg_prefix, 'config', 'params.yaml')
+    
+    trajectory_param = DeclareLaunchArgument(
+        'trajectory_param_file',
+        default_value=trajectory_param_file,
+        description='Path to config file for trajectory node'
+    )
+    trajectory_node = Node(
+        package='trajectory',
+        name='trajectory_node',
+        executable='trajectory_node',
+        parameters=[LaunchConfiguration('trajectory_param_file')],
+    )
+    ld.add_action(trajectory_param)
+    ld.add_action(trajectory_node)
+
+
+    # #################### Planner Node #####################
     planner_pkg_prefix = get_package_share_directory('planner')
     planner_param_file = os.path.join(
         planner_pkg_prefix, 'config', 'params.yaml')

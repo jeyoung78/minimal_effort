@@ -26,11 +26,12 @@ PlannerNode::PlannerNode() : Node("planner")
   this->declare_parameter<double>("ki", false);
   this->declare_parameter<double>("kd", false);
   this->declare_parameter<double>("k", false);
+  this->declare_parameter<double>("derivative_thresh", 0.0);
   kp_ = this->get_parameter("kp").as_double();
   ki_ = this->get_parameter("ki").as_double();
   kd_ = this->get_parameter("kd").as_double();
   k_ = this->get_parameter("k").as_double();
-
+  derivative_thresh_ = this->get_parameter("derivative_thresh").as_double();
 }
 
 void PlannerNode::ballGoalCallback(
@@ -92,6 +93,14 @@ void PlannerNode::ballDetectionCallback(
   // Calculate Derivatives
   double derivativeX = (errorX - prevErrorX) / dt;
   double derivativeY = (errorY - prevErrorY) / dt;
+
+  if (sqrt(pow(derivativeX,2) + pow(derivativeY,2)) < derivative_thresh_) {
+    derivativeX = 0;
+    derivativeY = 0;
+  }
+
+  RCLCPP_INFO(this->get_logger(), "derivativeX %f", derivativeX);
+  RCLCPP_INFO(this->get_logger(), "derivativeY %f", derivativeY);
 
   RCLCPP_INFO(this->get_logger(), "output from derivativeX %f", kd_ * derivativeX);
   RCLCPP_INFO(this->get_logger(), "output from derivativeY %f", kd_ * derivativeY);
