@@ -12,15 +12,59 @@ TrajectoryNode::TrajectoryNode() : Node("trajectory")
           &TrajectoryNode::ballDetectionCallback, this,
           std::placeholders::_1));
 
+  // Subscribing to traj_type_sub_ msg
+  traj_type_sub_ = this->create_subscription<std_msgs::msg::String>(
+      "/traj_type", ADVERTISING_FREQ,
+      std::bind(
+          &TrajectoryNode::trajTypeCallback, this,
+          std::placeholders::_1));
+
   // Setup publisher for normal vector publishing
   goal_point_pub_ = this->create_publisher<geometry_msgs::msg::Pose2D>("/ball_goal", ADVERTISING_FREQ);
 
-  this->declare_parameter<double>("vel_threshold", 0.0);
-  vel_threshold_ = this->get_parameter("vel_threshold").as_double();
+  this->declare_parameter<double>("time_between_goals", 2.5);
+  time_between_goals_ = this->get_parameter("time_between_goals").as_double();
 
   // TrajectoryNode::constructCircleTrajectory();
-  TrajectoryNode::constructSquareTrajectory();
-  // TrajectoryNode::gotoOrigin();
+  // TrajectoryNode::constructSquareTrajectory();
+  TrajectoryNode::gotoOrigin();
+
+  this->declare_parameter<double>("error_threshold", 0.0);
+  errorThreshold = this->get_parameter("error_threshold").as_double();
+
+  this->declare_parameter<int>("time_threshold_origin", 0);
+  timeThresholdOrigin = this->get_parameter("time_threshold_origin").as_int();
+  this->declare_parameter<int>("time_threshold_circle", 0);
+  timeThresholdCircle = this->get_parameter("time_threshold_circle").as_int();
+  this->declare_parameter<int>("time_threshold_square", 0);
+  timeThresholdSquare = this->get_parameter("time_threshold_square").as_int();
+
+  timeThreshold = timeThresholdOrigin;
+}
+
+void TrajectoryNode::trajTypeCallback(std_msgs::msg::String msg)
+{
+  trajectory.clear();
+  if (msg.data == "circle")
+  {
+    RCLCPP_INFO(this->get_logger(), "changed to circle");
+    TrajectoryNode::constructCircleTrajectory();
+    timeThreshold = timeThresholdCircle;
+  }
+  else if (msg.data == "square")
+  {
+    RCLCPP_INFO(this->get_logger(), "changed to square");
+    curr_traj_type = "square";
+    TrajectoryNode::constructSquareTrajectory();
+    timeThreshold = timeThresholdSquare;
+  }
+  else
+  {
+    RCLCPP_INFO(this->get_logger(), "changed to origin");
+    curr_traj_type = "origin";
+    TrajectoryNode::gotoOrigin();
+    timeThreshold = timeThresholdOrigin;
+  }
 }
 
 void TrajectoryNode::gotoOrigin()
@@ -29,55 +73,56 @@ void TrajectoryNode::gotoOrigin()
   origin.x = 0;
   origin.y = 0;
   goal_point_pub_->publish(origin);
+
+  trajectory.push_back(origin);
 }
 
 void TrajectoryNode::ballDetectionCallback(
     nav_msgs::msg::Odometry msg)
 {
   if (msg.pose.pose.orientation.w < 0.0) {
-    prevDetection = msg;
     return;
-  }
-
-  if (prevDetection.header.stamp.nanosec == 0 || prevDetection.header.stamp.sec == 0) { 
-    prevDetection = msg;
-    return; 
   }
 
   double currPosX = msg.pose.pose.position.x;
   double currPosY = msg.pose.pose.position.y;
-  double errorX = currentGoal.x - currPosX;
-  double errorY = currentGoal.y - currPosY;
+  double errorX = currPosX - currentGoal.x;
+  double errorY = currPosY - currentGoal.y;
+  double total_error = sqrt(pow(errorX, 2) + pow(errorY, 2));
 
-  double t_now = msg.header.stamp.sec * pow(10, 9) + msg.header.stamp.nanosec;
-  double t_prev = prevDetection.header.stamp.sec * pow(10, 9) + prevDetection.header.stamp.nanosec;
-  double dt = (t_now - t_prev) / pow(10, 9);
+  RCLCPP_INFO(this->get_logger(), "total error %f", total_error);
 
-  // Calculate Derivatives
-  double derivativeX = (errorX - prevErrorX) / dt;
-  double derivativeY = (errorY - prevErrorY) / dt;
+  // count up time at place
+  if (total_error < errorThreshold)
+    time_count++;
+  else
+    time_count = 0;
 
-  double total_vel = sqrt(pow(derivativeX, 2)+ pow(derivativeY, 2));
+  RCLCPP_INFO(this->get_logger(), "time count %d", time_count);
+  RCLCPP_INFO(this->get_logger(), "time timeThreshold %d", timeThreshold);
 
-  if (total_vel < vel_threshold_)
+  // If at point long enough, then
+  if (time_count > timeThreshold)
   {
-    thesholdCounter++;
+    time_count = 0;
     geometry_msgs::msg::Pose2D newGoal = trajectory[0];
     currentGoal = newGoal;
 
     RCLCPP_INFO(this->get_logger(), "Publishing new goal %f %f", newGoal.x, newGoal.y);
     goal_point_pub_->publish(newGoal);
 
+    if (trajectory.size() == 1) {
+      return;
+    }
+
     trajectory.erase(trajectory.begin());
     trajectory.push_back(newGoal);
   }
-
-  prevDetection = msg;
 }
 
 void TrajectoryNode::constructCircleTrajectory()
 {
-  double offset = 10;
+  double offset = 150;
   double xMax = 250 - offset;
   double yMax = 250 - offset;
   double thetaInc = (2 * M_PI) / numPoints;

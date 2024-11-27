@@ -1,3 +1,7 @@
 trajectory_node:
   ros__parameters:
-    vel_threshold: 50.0
+
+    error_threshold: 40.0
+    time_threshold_origin: 50
+    time_threshold_circle: 10
+    time_threshold_square: 50

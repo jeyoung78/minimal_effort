@@ -3,46 +3,339 @@
 #include <cmath>
 
 PerceptionNode::PerceptionNode() : Node("perception_node") {
+    clock_ = this->get_clock();
+
+    // Initialize time variables
+    auto zero_time = rclcpp::Time(0, 0, clock_->get_clock_type()); // Initialize with same clock type
+    last_in_origin_ = zero_time;
+    last_in_square_ = zero_time;
+    last_in_circle_ = zero_time;
+
     image_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
         "/camera/image", 10, 
         std::bind(&PerceptionNode::imageCallback, this, std::placeholders::_1));
 
     odometry_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("/ball_odometry", 10);
     debug_image_publisher_ = this->create_publisher<sensor_msgs::msg::Image>("/camera/debug_image", 10);
+    traj_type_publisher_ = this->create_publisher<std_msgs::msg::String>("/traj_type", 10);
+    normal_publisher_ = this->create_publisher<geometry_msgs::msg::Vector3>("/normal_vector", 10);
+
+    timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(100),
+        std::bind(&PerceptionNode::checkTrajectory, this));
 
     RCLCPP_INFO(this->get_logger(), "PerceptionNode initialized");
 }
 
-void PerceptionNode::initializeKalmanFilter() {
-    kalman_filter_ = cv::KalmanFilter(4, 2, 0); // 4 states (x, y, vx, vy), 2 measurements (x, y)
+void PerceptionNode::checkTrajectory() {
+    const double REQUIRED_DURATION = 3.0;
 
-    // State transition matrix (A)
-    kalman_filter_.transitionMatrix = (cv::Mat_<float>(4, 4) <<
-        1, 0, 1, 0,
-        0, 1, 0, 1,
-        0, 0, 1, 0,
-        0, 0, 0, 1);
+    auto now = clock_->now(); // Use consistent clock source
 
-    // Measurement matrix (H)
-    kalman_filter_.measurementMatrix = (cv::Mat_<float>(2, 4) <<
-        1, 0, 0, 0,
-        0, 1, 0, 0);
+    if (last_in_origin_ != rclcpp::Time(0, 0, clock_->get_clock_type()) &&
+        (now - last_in_origin_).seconds() >= REQUIRED_DURATION) {
+        auto msg = std_msgs::msg::String();
+        msg.data = "origin";
+        traj_type_publisher_->publish(msg);
+        geometry_msgs::msg::Vector3 n;
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        RCLCPP_INFO(this->get_logger(), "Published trajectory type: origin");
+        last_in_origin_ = rclcpp::Time(0, 0, clock_->get_clock_type());
+    }
 
-    // Process noise covariance matrix (Q)
-    cv::setIdentity(kalman_filter_.processNoiseCov, cv::Scalar::all(1e-2));
+    if (last_in_square_ != rclcpp::Time(0, 0, clock_->get_clock_type()) &&
+        (now - last_in_square_).seconds() >= REQUIRED_DURATION) {
+        auto msg = std_msgs::msg::String();
+        msg.data = "square";
+        traj_type_publisher_->publish(msg);
+        geometry_msgs::msg::Vector3 n;
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        RCLCPP_INFO(this->get_logger(), "Published trajectory type: square");
+        last_in_square_ = rclcpp::Time(0, 0, clock_->get_clock_type());
+    }
 
-    // Measurement noise covariance matrix (R)
-    cv::setIdentity(kalman_filter_.measurementNoiseCov, cv::Scalar::all(1e-1));
-
-    // Error covariance matrix (P)
-    cv::setIdentity(kalman_filter_.errorCovPost, cv::Scalar::all(1));
-
-    // Initial state
-    state_ = cv::Mat::zeros(4, 1, CV_32F);
-    measurement_ = cv::Mat::zeros(2, 1, CV_32F);
-
-    is_kalman_initialized_ = true;
+    if (last_in_circle_ != rclcpp::Time(0, 0, clock_->get_clock_type()) &&
+        (now - last_in_circle_).seconds() >= REQUIRED_DURATION) {
+        auto msg = std_msgs::msg::String();
+        msg.data = "circle";
+        traj_type_publisher_->publish(msg);
+        geometry_msgs::msg::Vector3 n;
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = 0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = -0.1132;
+        n.y = 0.0;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        n.x = 0.0;
+        n.y = -0.1132;
+        n.z = 0.9936;
+        normal_publisher_->publish(n);
+        RCLCPP_INFO(this->get_logger(), "Published trajectory type: circle");
+        last_in_circle_ = rclcpp::Time(0, 0, clock_->get_clock_type());
+    }
 }
+
+
+void PerceptionNode::updateRegionTimes(double x, double y) {
+    const double ORIGIN_X = 190, ORIGIN_Y = 160, ORIGIN_TOLERANCE = 50;
+    const double SQUARE_X = -170, SQUARE_Y = 140, SQUARE_TOLERANCE = 50;
+    const double CIRCLE_X = 130, CIRCLE_Y = -150, CIRCLE_TOLERANCE = 50;
+
+    auto now = clock_->now(); // Use consistent clock source
+
+    if (std::abs(x - ORIGIN_X) <= ORIGIN_TOLERANCE && std::abs(y - ORIGIN_Y) <= ORIGIN_TOLERANCE) {
+        if (last_in_origin_ == rclcpp::Time(0, 0, clock_->get_clock_type())) {
+            last_in_origin_ = now; // Start the timer
+        }
+    } else {
+        last_in_origin_ = rclcpp::Time(0, 0, clock_->get_clock_type()); // Reset timer if the ball leaves the region
+    }
+
+    if (std::abs(x - SQUARE_X) <= SQUARE_TOLERANCE && std::abs(y - SQUARE_Y) <= SQUARE_TOLERANCE) {
+        if (last_in_square_ == rclcpp::Time(0, 0, clock_->get_clock_type())) {
+            last_in_square_ = now; // Start the timer
+        }
+    } else {
+        last_in_square_ = rclcpp::Time(0, 0, clock_->get_clock_type()); // Reset timer if the ball leaves the region
+    }
+
+    if (std::abs(x - CIRCLE_X) <= CIRCLE_TOLERANCE && std::abs(y - CIRCLE_Y) <= CIRCLE_TOLERANCE) {
+        if (last_in_circle_ == rclcpp::Time(0, 0, clock_->get_clock_type())) {
+            last_in_circle_ = now; // Start the timer
+        }
+    } else {
+        last_in_circle_ = rclcpp::Time(0, 0, clock_->get_clock_type()); // Reset timer if the ball leaves the region
+    }
+}
+
 
 
 void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg) {
@@ -78,7 +371,7 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
         cv::drawContours(debug_frame, contours, -1, cv::Scalar(0, 255, 0), 2); // Draw all contours in green with a thickness of 2
         
         auto debug_msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", debug_frame).toImageMsg();
-        debug_msg->header.stamp = this->get_clock()->now();
+        debug_msg->header.stamp = clock_->now();
         debug_image_publisher_->publish(*debug_msg);
     } catch (cv_bridge::Exception &e) {
         RCLCPP_ERROR(this->get_logger(), "cv_bridge exception when publishing debug image: %s", e.what());
@@ -106,29 +399,9 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
             double cx = moments.m10 / moments.m00;
             double cy = moments.m01 / moments.m00;
 
-            if (!is_kalman_initialized_) {
-                initializeKalmanFilter();
-                state_.at<float>(0) = static_cast<float>(cx);
-                state_.at<float>(1) = static_cast<float>(cy);
-                kalman_filter_.statePost = state_;
-            }
-
-            // Predict the state
-            cv::Mat prediction = kalman_filter_.predict();
-            float velocity_x = prediction.at<float>(2);
-            float velocity_y = prediction.at<float>(3);
-
-            // Correct with measurement
-            measurement_.at<float>(0) = static_cast<float>(cx);
-            measurement_.at<float>(1) = static_cast<float>(cy);
-            cv::Mat estimated = kalman_filter_.correct(measurement_);
-
-            // Extract covariance
-            const cv::Mat &P = kalman_filter_.errorCovPost;
-
             // Publish the odometry message
             auto odometry_msg = nav_msgs::msg::Odometry();
-            odometry_msg.header.stamp = this->get_clock()->now();
+            odometry_msg.header.stamp = clock_->now();
             odometry_msg.header.frame_id = "camera_frame";
             odometry_msg.child_frame_id = "ball";
 
@@ -137,11 +410,17 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
             // double y = estimated.at<float>(1) - 220;
             double x = cx - 300;
             double y = cy - 220;
-            double theta = -45 * M_PI / 180;
+            double theta = 135 * M_PI / 180;
 
-            odometry_msg.pose.pose.position.x = -x*cos(theta) + y*sin(theta); // Smoothed x
-            odometry_msg.pose.pose.position.y = x*sin(theta) + y*cos(theta); // Smoothed y
+            double temp = x;
+            x = x * cos(theta) - y * sin(theta);
+            y = temp * sin(theta) + y * cos(theta);
+
+            odometry_msg.pose.pose.position.x = x; // Smoothed x
+            odometry_msg.pose.pose.position.y = -y; // Smoothed y
             odometry_msg.pose.pose.position.z = 0.0;
+
+            updateRegionTimes(x, -y);
 
             // Orientation (dummy value)
             odometry_msg.pose.pose.orientation.w = 1.0;
@@ -149,9 +428,9 @@ void PerceptionNode::imageCallback(const sensor_msgs::msg::Image::SharedPtr msg)
             odometry_publisher_->publish(odometry_msg);
 
             RCLCPP_INFO(this->get_logger(),
-                        "Predicted ball position: x=%.2f, y=%.2f | Velocity: vx=%.2f, vy=%.2f",
-                        odometry_msg.pose.pose.position.x, odometry_msg.pose.pose.position.y,
-                        velocity_x, velocity_y);
+                        "Predicted ball position: x=%.2f, y=%.2f",
+                        odometry_msg.pose.pose.position.x, odometry_msg.pose.pose.position.y);
+
         } else {
             RCLCPP_WARN(this->get_logger(),
                         "Contour rejected: radius=%.2f (not within [%.2f, %.2f])", radius, MIN_RADIUS, MAX_RADIUS);

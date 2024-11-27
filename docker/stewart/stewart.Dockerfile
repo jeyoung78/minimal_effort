@@ -54,7 +54,7 @@ ARG MINIMAL_EFFORT_INSTALL=/opt/minimal_effort/
 WORKDIR ${AMENT_WS}
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build \
-    --cmake-args -DCMAKE_BUILD_TYPE=Release --install-base ${MINIMAL_EFFORT_INSTALL}
+    --executor sequential --cmake-args -DCMAKE_BUILD_TYPE=Release --install-base ${MINIMAL_EFFORT_INSTALL}
 
 # Source and Build Artifact Cleanup 
 RUN rm -rf src/* build/* devel/* install/* log/*

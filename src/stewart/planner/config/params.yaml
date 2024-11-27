@@ -1,6 +1,6 @@
 planner_node:
   ros__parameters:
-    kp: 0.068
+    kp: 0.075
     ki: 0.001
     kd: 0.035
     k: 1.0
@@ -16,7 +16,7 @@ planner_node:
     # kd: 0.029
     # k: 1.0
 
-    derivative_thresh: 40.0
+    derivative_thresh: 20.0
 
     # decent tune, kp too high
     # kp: 0.065

@@ -25,9 +25,9 @@ CameraDriverNode::CameraDriverNode() : Node("camera_driver") {
   this->declare_parameter<int>("frames_per_second", 30);
   this->declare_parameter<bool>("compute_homography", false);
   this->declare_parameter<bool>("debug", false);
-  this->declare_parameter<int>("checkerboard_nx", false);
-  this->declare_parameter<int>("checkerboard_ny", false);
-  this->declare_parameter<double>("checkerboard_segment_length", false);
+  this->declare_parameter<int>("checkerboard_nx", 10);
+  this->declare_parameter<int>("checkerboard_ny", 10);
+  this->declare_parameter<double>("checkerboard_segment_length", 0.0);
   frames_per_second_ = this->get_parameter("frames_per_second").as_int();
   compute_homography_ = this->get_parameter("compute_homography").as_bool();
   debug_ = this->get_parameter("debug").as_bool();
