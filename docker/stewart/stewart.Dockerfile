@@ -13,6 +13,7 @@ COPY src/stewart/camera_driver camera_driver
 COPY src/stewart/perception perception
 COPY src/stewart/planner planner
 COPY src/stewart/control control
+COPY src/stewart/trajectory trajectory
 
 # Scan for rosdeps
 RUN apt-get -qq update && rosdep update && \
