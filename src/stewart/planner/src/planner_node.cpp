@@ -6,18 +6,18 @@
 PlannerNode::PlannerNode() : Node("planner")
 {
   // Setup publisher for normal vector publishing
-  norm_vec_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/normal_vector_", ADVERTISING_FREQ);
+  norm_vec_pub_ = this->create_publisher<geometry_msgs::msg::Vector3>("/normal_vector", ADVERTISING_FREQ);
 
   // Subscribing to ball detection msg
   ball_detection_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-      "ball_detection", ADVERTISING_FREQ,
+      "/ball_odometry", ADVERTISING_FREQ,
       std::bind(
           &PlannerNode::ballDetectionCallback, this,
           std::placeholders::_1));
 
   // Subscribing to ball goal msg
   ball_goal_sub_ = this->create_subscription<geometry_msgs::msg::Pose2D>(
-      "ball_goal", ADVERTISING_FREQ,
+      "/ball_goal", ADVERTISING_FREQ,
       std::bind(
           &PlannerNode::ballGoalCallback, this,
           std::placeholders::_1));

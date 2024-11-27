@@ -3,6 +3,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <random>
+#include <thread>
 
 #include "camera_driver_node.hpp"
 
@@ -44,10 +45,20 @@ CameraDriverNode::CameraDriverNode() : Node("camera_driver") {
   }
 
   // Initialize OpenCV video capture
+  cap_.set(cv::CAP_PROP_BUFFERSIZE, 0);
   cap_.open(0); // Open the default webcam (ID 0)
   if (!cap_.isOpened()) {
     RCLCPP_ERROR(this->get_logger(), "Failed to open the webcam.");
     rclcpp::shutdown();
+  }
+
+  // Flush the buffer
+  cv::Mat temp_frame;
+  for (int i = 0; i < 5; ++i) { // Read and discard the first few frames
+    cap_.read(temp_frame);
+    if (temp_frame.empty()) {
+      RCLCPP_WARN(this->get_logger(), "Flushing webcam buffer failed on frame %d.", i);
+    }
   }
 
   // Start timer to capture and publish frames
@@ -56,9 +67,15 @@ CameraDriverNode::CameraDriverNode() : Node("camera_driver") {
     std::bind(&CameraDriverNode::publishFrame, this));
 }
 
+CameraDriverNode::~CameraDriverNode() {
+  if (cap_.isOpened()) {
+    cap_.release(); // Release the webcam
+  }
+}
+
 void CameraDriverNode::publishFrame() {
   cv::Mat frame;
-  cap_ >> frame;  // Capture a frame
+  cap_ >> frame;
 
   if (frame.empty()) {
     RCLCPP_WARN(this->get_logger(), "Captured an empty frame.");
@@ -89,9 +106,9 @@ void CameraDriverNode::publishFrame() {
 
     // Flatten the 3x3 matrix into a row-major array
     for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            msg.homography[i * 3 + j] = static_cast<double>(homography.at<double>(i, j));
-        }
+      for (int j = 0; j < 3; ++j) {
+        msg.homography[i * 3 + j] = static_cast<double>(homography.at<double>(i, j));
+      }
     }
 
     homography_publisher_->publish(msg);
@@ -111,7 +128,7 @@ cv::Mat CameraDriverNode::getHomography(cv::Mat & frame) {
   std::pair<std::vector<cv::Point2f>,std::vector<cv::Point2f>> ideal_checker_vertex_pairs = corrospondToIdealVertices(checker_vertices);
 
   // Calculate the homography matrix
-  cv::Mat homography = averageHomography(ideal_checker_vertex_pairs);
+  // cv::Mat homography = averageHomography(ideal_checker_vertex_pairs);
 
   if (debug_) {
     // Convert binary image to a 3-channel BGR image for color drawing
@@ -130,26 +147,26 @@ cv::Mat CameraDriverNode::getHomography(cv::Mat & frame) {
     auto msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", binary_with_contours).toImageMsg();
     image_debug_publisher_.publish(msg);
 
-    // Represent the point in homogeneous coordinates
-    cv::Point2f input_point(82, 22);
-    cv::Mat point(3, 1, CV_64F);
-    point.at<double>(0, 0) = input_point.x; // x-coordinate
-    point.at<double>(1, 0) = input_point.y; // y-coordinate
-    point.at<double>(2, 0) = 1.0;           // homogeneous coordinate
+    // // Represent the point in homogeneous coordinates
+    // cv::Point2f input_point(82, 22);
+    // cv::Mat point(3, 1, CV_64F);
+    // point.at<double>(0, 0) = input_point.x; // x-coordinate
+    // point.at<double>(1, 0) = input_point.y; // y-coordinate
+    // point.at<double>(2, 0) = 1.0;           // homogeneous coordinate
 
-    // Transform the point using the homography matrix
-    cv::Mat transformed_point = homography * point;
+    // // Transform the point using the homography matrix
+    // cv::Mat transformed_point = homography * point;
 
-    // Convert back to Cartesian coordinates
-    double x_prime = transformed_point.at<double>(0, 0) / transformed_point.at<double>(2, 0);
-    double y_prime = transformed_point.at<double>(1, 0) / transformed_point.at<double>(2, 0);
+    // // Convert back to Cartesian coordinates
+    // double x_prime = transformed_point.at<double>(0, 0) / transformed_point.at<double>(2, 0);
+    // double y_prime = transformed_point.at<double>(1, 0) / transformed_point.at<double>(2, 0);
 
-    // Print the result
-    RCLCPP_INFO(this->get_logger(), "Input Point: ( %f %f )", input_point.x, input_point.y);
-    RCLCPP_INFO(this->get_logger(), "Transformed Point:  ( %f %f )", x_prime, y_prime);
+    // // Print the result
+    // RCLCPP_INFO(this->get_logger(), "Input Point: ( %f %f )", input_point.x, input_point.y);
+    // RCLCPP_INFO(this->get_logger(), "Transformed Point:  ( %f %f )", x_prime, y_prime);
   }
   
-  return homography;
+  return frame;
 }
 
 cv::Mat CameraDriverNode::preprocessImage(const cv::Mat& frame) {

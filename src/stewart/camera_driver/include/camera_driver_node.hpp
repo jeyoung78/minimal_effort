@@ -13,6 +13,7 @@
 class CameraDriverNode : public rclcpp::Node {
   public:
     CameraDriverNode();
+    ~CameraDriverNode();
   
   private:
     void publishFrame();

@@ -14,7 +14,7 @@ ControlNode::ControlNode() : Node("control")
 
   // Subscribing to normal vector msg callback
   norm_vector_sub_ = this->create_subscription<geometry_msgs::msg::Vector3>(
-      "/normal_vector_", ADVERTISING_FREQ,
+      "/normal_vector", ADVERTISING_FREQ,
       std::bind(
           &ControlNode::controlCallback, this,
           std::placeholders::_1));
