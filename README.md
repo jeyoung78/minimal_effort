@@ -1,6 +1,8 @@
 # Minimal Effort
 Dockerized ROS2 repo for a 4-arm ball balancing platform.
 
+![](IMG_2576.mov)
+
 ## To Use
 1. Clone the repo:
 ``` bash
