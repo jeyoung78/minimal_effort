@@ -1,5 +1,4 @@
 ## ----------------------- mind Configuration File Override ----------------------------
-
 ##
 ## HINT: You can copy the contents of this file to a mind-config.local.sh 
 ##       file that is untrackable by git and readable by mind.
