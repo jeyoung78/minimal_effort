@@ -25,11 +25,11 @@ MODE_OF_OPERATION="deploy"
 
 ############################## ADVANCED CONFIGURATIONS ##############################
 ## Name to append to docker containers. DEFAULT = "<your_watcloud_username>"
-COMPOSE_PROJECT_NAME="eddy"
+# COMPOSE_PROJECT_NAME=""
 
 ## Tag to use. Images are formatted as <IMAGE_NAME>:<TAG> with forward slashes replaced with dashes.
 ## DEFAULT = "<your_current_github_branch>"
-TAG="eddy"
+# TAG=""
 
 # Docker Registry to pull/push images. DEFAULT = "ghcr.io/watonomous/wato_monorepo"
 # REGISTRY_URL=""
