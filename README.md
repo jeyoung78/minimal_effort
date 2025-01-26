@@ -25,6 +25,4 @@ git clone git@github.com:Edwardius/minimal_effort.git
 ./mind up
 ```
 
-You are all set! You can view more developer tools and tips at https://wiki.watonomous.ca/autonomous_software/monorepo_infrastructure
-
 All source code is located under `src` and are all rosnodes.
