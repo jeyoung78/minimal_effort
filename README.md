@@ -1,5 +1,5 @@
 # Minimal Effort
-Dockerized ROS2 repo for a 4-arm ball balancing platform.
+Dockerized ROS2 repo for a 4-arm ball balancing platform. Developed as a part MTE380 project in a group of four. 
 
 https://github.com/user-attachments/assets/7025b53a-dd6f-4625-b840-a4bffec2d5b9
 
